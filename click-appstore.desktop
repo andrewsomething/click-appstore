@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=click-apps
+Comment=My project description
+Exec=/usr/bin/qmlscene $@ /usr/share/click-apps/click-apps.qml
+Icon=qmlscene
+Terminal=false
+Type=Application
+X-Ubuntu-Touch=true
