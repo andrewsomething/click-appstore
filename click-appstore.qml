@@ -47,8 +47,17 @@ MainView {
     width: units.gu(100)
     height: units.gu(75)
 
+    PageStack {
+        id: pageStack
+
+        Component.onCompleted: pageStack.push(allApps)
+
+    }
+
     Page {
+        id: allApps
         title: "Available Apps"
+        visible: false
 
         ListView {
             anchors.fill: parent
@@ -57,12 +66,89 @@ MainView {
                 icon: icon_url
                 text: title
                 subText: name
+                onClicked: {
+                    Http.get("https://search.apps.ubuntu.com/api/v1/package/" + name, [], loadDetails)
+                    pageStack.push(appDetails, {title: title})
+                }
+            }
+        }
+    }
+
+    Page {
+        id: appDetails
+        visible: false
+
+        ListView {
+            anchors.fill: parent
+            anchors.margins: units.gu(2)
+            model: detailsModel
+            delegate: Column {
+                width: parent.width
+                anchors.centerIn: parent
+                spacing: units.gu(2)
+
+                Image {
+                    source: icon_url
+                }
+
+                Label {
+                    text: "Description:"
+                    fontSize: "large"
+                }
+
+                Item {
+                    width: parent.width
+                    height: body.paintedHeight + units.gu(2)
+
+                    UbuntuShape {
+                        color: "white"
+                        anchors.fill: parent
+
+                        Label {
+                            id: body
+                            width: parent.width - units.gu(2)
+                            anchors.centerIn: parent
+                            text: model.description
+                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                        }
+                    }
+                }
+
+                Label {
+                    text: "Version: " + version
+                }
+
+                Label {
+                    text: "Website: <a href='" + website + "'>" + website + "</a>"
+                    onLinkActivated: {
+                      Qt.openUrlExternally(website)
+                    }
+                }
+
+                Label {
+                    text: "License: " + license
+                }
+
+                Label {
+                    text: "Screenshot:"
+                }
+
+                Image {
+                    width: 0.666667*parent.width
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    source: screenshot_url
+                }
             }
         }
     }
 
     ListModel {
         id: appsModel
+    }
+
+    ListModel {
+        id: detailsModel
     }
 
     Component.onCompleted: Http.get("https://search.apps.ubuntu.com/api/v1/search?q=", [], loadApps)
@@ -72,5 +158,11 @@ MainView {
         for (var i = 0; i < json.length; i++) {
             appsModel.append(json[i])
         }
+    }
+
+    function loadDetails(response) {
+        detailsModel.clear()
+        var json = JSON.parse(response)
+        detailsModel.append(json)
     }
 }
